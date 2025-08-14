@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sommaire</title>
+  <style>
+    :root {
+      --fab-size: 64px;
+      --fab-gap: 16px; 
+      --fab-bg: #111827;
+      --fab-fg: #ffffff;
+      --ring: 0 0 0 4px rgba(59,130,246,0.35);
+      --panel-w: 320px;
+      --panel-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: #ffffff;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: #0f172a;
+    }
+
+    .fab {
+      position: fixed;
+      left: var(--fab-gap);
+      bottom: var(--fab-gap);
+      width: var(--fab-size);
+      height: var(--fab-size);
+      border-radius: 50%;
+      background: var(--fab-bg);
+      color: var(--fab-fg);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+      border: none;
+      cursor: pointer;
+      transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
+    }
+    .fab:hover { transform: translateY(-1px); box-shadow: 0 14px 28px rgba(0,0,0,0.28); }
+    .fab:active { transform: translateY(0); }
+    .fab:focus-visible { outline: none; box-shadow: 0 10px 20px rgba(0,0,0,0.25), var(--ring); }
+
+    .burger {
+      position: relative;
+      width: 28px; height: 18px;
+    }
+    .burger span {
+      position: absolute; left: 0; right: 0;
+      height: 2px; background: currentColor; border-radius: 1px;
+      transform-origin: 50% 50%;
+      transition: transform 250ms ease, opacity 200ms ease, top 250ms ease;
+    }
+    .burger span:nth-child(1) { top: 0; }
+    .burger span:nth-child(2) { top: 8px; }
+    .burger span:nth-child(3) { top: 16px; }
+
+    .fab[aria-expanded="true"] .burger span:nth-child(1) {
+      top: 8px; transform: rotate(45deg);
+    }
+    .fab[aria-expanded="true"] .burger span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .fab[aria-expanded="true"] .burger span:nth-child(3) {
+      top: 8px; transform: rotate(-45deg);
+    }
+
+    .side-menu {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: min(90vw, var(--panel-w));
+      background: #ffffff;
+      box-shadow: var(--panel-shadow);
+      transform: translateX(-100%);
+      transition: transform 300ms ease;
+      will-change: transform;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      z-index: 30;
+    }
+    .side-menu.open { transform: translateX(0); }
+
+    .menu-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 16px 18px; border-bottom: 1px solid #e5e7eb;
+      font-weight: 600; letter-spacing: .2px;
+    }
+    .menu-content { overflow: auto; padding: 10px 8px 16px 8px; }
+    .menu-footer { border-top: 1px solid #e5e7eb; padding: 10px 14px; font-size: 12px; color: #6b7280; }
+
+    .toc {
+      list-style: none; margin: 0; padding: 0;
+    }
+    .toc a {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px; text-decoration: none;
+      color: #0f172a;
+      transition: background 160ms ease, transform 80ms ease;
+    }
+    .toc a:hover { background: #f3f4f6; }
+    .toc a:active { transform: translateY(1px); }
+    .toc a:focus-visible { outline: none; box-shadow: var(--ring); }
+
+    .toc .badge {
+      font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #eef2ff; color: #3730a3;
+      margin-left: auto;
+    }
+
+    .backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.22);
+      opacity: 0; pointer-events: none; transition: opacity 250ms ease; z-index: 20;
+    }
+    .backdrop.show { opacity: 1; pointer-events: auto; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fab, .burger span, .side-menu, .backdrop { transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="fab" id="fab" aria-label="Ouvrir le sommaire" aria-controls="sommaire" aria-expanded="false">
+    <span class="burger" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </span>
+  </button>
+
+  <div class="backdrop" id="backdrop" hidden></div>
+
+  <nav id="sommaire" class="side-menu" aria-hidden="true" aria-label="Sommaire">
+    <div class="menu-header">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M3 6h18M3 12h18M3 18h18" stroke="#0f172a" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Sommaire
+    </div>
+    <div class="menu-content">
+      <ul class="toc" id="toc">
+        <li><a href="#chap-1"><span>Chapitre 1 – Généralités</span><span class="badge">Nouveau</span></a></li>
+        <li><a href="#chap-2">Chapitre 2 – Compétences</a></li>
+        <li><a href="#chap-3">Chapitre 3 – Exercices</a></li>
+        <li><a href="#chap-4">Chapitre 4 – Évaluations</a></li>
+        <li><a href="#chap-5">Chapitre 5 – Annexes</a></li>
+      </ul>
+    </div>
+    <div class="menu-footer">
+      Appuyez sur <strong>Échap</strong> pour fermer • Naviguez au clavier avec <strong>Tab</strong>
+    </div>
+  </nav>
+
+  <script>
+    const fab = document.getElementById('fab');
+    const menu = document.getElementById('sommaire');
+    const backdrop = document.getElementById('backdrop');
+
+    const getFocusable = () => menu.querySelectorAll(
+      'a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+
+    function openMenu() {
+      fab.setAttribute('aria-expanded', 'true');
+      menu.classList.add('open');
+      menu.setAttribute('aria-hidden', 'false');
+      backdrop.hidden = false; backdrop.classList.add('show');
+      const focusables = getFocusable();
+      focusables[0]?.focus();
+      document.documentElement.style.overflow = 'hidden';
+    }
+
+    function closeMenu() {
+      fab.setAttribute('aria-expanded', 'false');
+      menu.classList.remove('open');
+      menu.setAttribute('aria-hidden', 'true');
+      backdrop.classList.remove('show');
+      setTimeout(() => { backdrop.hidden = true; }, 200);
+      fab.focus();
+      document.documentElement.style.overflow = '';
+    }
+
+    function toggleMenu() {
+      const isOpen = fab.getAttribute('aria-expanded') === 'true';
+      isOpen ? closeMenu() : openMenu();
+    }
+
+    fab.addEventListener('click', toggleMenu);
+    backdrop.addEventListener('click', closeMenu);
+
+    document.addEventListener('keydown', (e) => {
+      if (fab.getAttribute('aria-expanded') !== 'true') return;
+
+      if (e.key === 'Escape') { e.preventDefault(); closeMenu(); }
+
+      if (e.key === 'Tab') {
+        const focusables = Array.from(getFocusable());
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault(); last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault(); first.focus();
+        }
+      }
+    });
+
+    document.getElementById('toc').addEventListener('click', (e) => {
+      const link = e.target.closest('a');
+      if (!link) return;
+      closeMenu();
+    });
+  </script>
+</body>
+</html>
